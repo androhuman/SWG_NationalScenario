@@ -68,4 +68,3 @@ install.packages(c(
   "broom", "patchwork", "sf", "rnaturalearth", "here"
 ))
 ```
-# SWG_NationalScenario
