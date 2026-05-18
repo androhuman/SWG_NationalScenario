@@ -257,7 +257,7 @@ s_10 <- plot_regression(trend_df,
                         xlab="Emissions reduction rate from baseline (%)", 
                         ylab="Decrease from baseline (%)")
 
-legend <- get_legend(s_1$plot) 
+legend <- get_legend(s_1$plot)
 
 s <- (s_1$plot + s_2$plot + s_3$plot + s_4$plot + s_5$plot + s_6$plot + s_7$plot + s_8$plot + s_9$plot) & 
   theme(legend.position = "none") 
@@ -436,7 +436,7 @@ s_10 <- plot_regression(trend_df,
                         xlab="Emissions reduction rate from base year (2020) (%)", 
                         ylab="Decrease from base year (2020) (%)")
 
-legend <- get_legend(s_1$plot) 
+legend <- get_legend(s_1$plot)
 
 s <- (s_1$plot + s_2$plot + s_3$plot + s_4$plot + s_5$plot + s_6$plot + s_7$plot + s_8$plot + s_9$plot) & 
   theme(legend.position = "none") 
@@ -650,7 +650,9 @@ p4.1 <-ggplot(emi_coverage, aes(x = 2, y = percentage, fill = Region)) +
   facet_wrap("Category")+
   xlim(0, 2.5) +
   theme_void() +
-  theme(legend.position = "none",
+  labs(title = "a. Emissions coverage") +
+  theme(plot.title = element_text(size = 12, face = "bold"),
+        legend.position = "none",
         legend.direction = "vertical")
 
 #C1, c2 range across effort sharing for the considered countries in this study 
@@ -687,8 +689,7 @@ g_emi_nzs_bar <- emi_cumulative_median %>%
         panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
         axis.text.x = element_text(angle = 45, hjust = 1),strip.text.y = element_text(angle = 90, hjust = 0), 
         strip.background = element_blank(),
-        legend.position = "none") +
-  labs(x = NULL) 
+        legend.position = "none") 
 
 #IPCC AR6 temperature range (C1, C2) for the considered countries
 g_world_C <- ggplot(c_range_n) +
@@ -714,8 +715,10 @@ g_world_C <- ggplot(c_range_n) +
 
 p4.3 <- (g_emi_nzs_bar + g_world_C) +
   plot_layout(ncol = 2, widths = c(0.07, 0.4)) +
-  theme(axis.title.y = element_text(size = 12))+
-  labs(x = 'Effort Sharing Schemes')  
+  theme(plot.title = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(size = 12))+
+  labs(x = 'Effort Sharing Schemes',
+       title = "d. Cumulative CO2 emissions")   
 
 #IPCC c1, c2 line range chart
 
@@ -773,14 +776,16 @@ p4.4 <- ggplot()+
                alpha = 0.2)+
   coord_flip()+
   theme_bw() +
-  theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  theme(plot.title = element_text(size = 12, face = "bold"),
+        panel.border = element_blank(), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
         axis.text.x = element_text(angle = 45, hjust = 1),strip.text.y = element_text(angle = 90, hjust = 0), 
         strip.background = element_blank(),
         legend.position = "none",
         legend.title.align = 0.5,  
         legend.text.align = 0) +  
-  labs(y = 'GCO2')  
+  labs(y = 'GtCO2',
+       title = "c. Cumulative emissions from (b)")  
 
 p4.2 <- ggplot() +
   geom_ribbon(data = data_summary, aes(x = Year, ymin = lower, ymax = upper, fill = Category), alpha = 0.2) +
@@ -803,19 +808,16 @@ p4.2 <- ggplot() +
   ) +
   geom_text(data=summary_box, aes(x = x_box + c(-0.5, 0, 0.5), y=lower-1, label=Category), hjust = 0, size=2)+
   theme_bw() +
-  theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  theme(plot.title = element_text(size = 12, face = "bold"),
+        panel.border = element_blank(), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
         axis.text.x = element_text(angle = 45, hjust = 1),strip.text.y = element_text(angle = 90, hjust = 0), 
         strip.background = element_blank(),
         legend.position = "none", 
         legend.title.align = 0.5, 
         legend.text.align = 0) +
-  labs(y = 'GCO2/yr') 
-
-p4.1 <- p4.1 + labs(title = "a. Emissions coverage") 
-p4.2 <- p4.2 + labs(title = "b. Net global CO2 emissions (IPCC AR6)") 
-p4.4 <- p4.4 + labs(title = "c. Cumulative emissions from (b)") 
-p4.3 <- p4.3 + labs(title = "d. Cumulative CO2 emissions") 
+  labs(y = 'GtCO2/yr',
+       title = "b. Net global CO2 emissions (IPCC AR6)")
 
 #plotting map
 world <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf") %>% 
@@ -846,30 +848,44 @@ p4.5 <- ggplot(map_df) +
         legend.direction = "horizontal")
 
 
-middle_block <- (p4.2 / p4.4 + plot_layout(heights = c(0.8, 0.2))) | p4.3
-
-top_block <- (p4.1 /
-                (middle_block + plot_layout(widths = c(0.5,0.5)))) +
-  plot_layout(heights = c(0.5,0.5))
-
 legend1 <- get_legend(
-  p4.1 + theme(legend.position = "right",
-               legend.direction = "vertical")
+  p4.1 +
+    theme(
+      legend.position = "right",
+      legend.direction = "vertical"
+    )
 )
 
-top_with_legend <- plot_grid(
-  top_block,
-  legend1,
-  ncol = 2,
-  rel_widths = c(0.85, 0.15)
-) 
+p4.1_noleg <- p4.1 +
+  theme(legend.position = "none")
 
-p4 <- plot_grid(
-  top_with_legend,
-  p4.5,
-  ncol = 1,
-  rel_heights = c(0.6, 0.4)
-)
+middle_block <- (
+  (
+    p4.2 /
+      p4.4
+  ) +
+    plot_layout(heights = c(0.8, 0.2))
+) |
+  p4.3
+
+top_block <- (
+  p4.1_noleg /
+    middle_block
+) +
+  plot_layout(heights = c(0.5, 0.5))
+
+top_with_legend <- (
+  top_block |
+    wrap_elements(full = legend1)
+) +
+  plot_layout(widths = c(0.85, 0.15))
+
+p4 <- (
+  top_with_legend /
+    p4.5
+) +
+  plot_layout(heights = c(0.6, 0.4))
+
 
 ggsave(filename=paste0(config$output$supplementary,"/", "4. Emissions Coverage and Remaining Budget Emissions CO2", ".jpg"), plot=p4, width=240, height=310, units='mm', dpi=300)
 

@@ -47,15 +47,15 @@ load_IPCC_AR6 <- function(config){
   
   AR6 <- list()
   
-  AR6$R5 <- read_csv(paste0(config$data$ref, "/1668008228539-AR6_Scenarios_Database_R5_regions_v1.1.csv/AR6_Scenarios_Database_R5_regions_v1.1.csv")) %>% 
+  AR6$R5 <- read_csv(paste0(config$data$ref, "/AR6_Scenarios_Database_R5_regions_v1.1.csv")) %>% 
     select("Model", "Scenario", "Region", "Variable", "Unit", "2020", "2025", "2030", "2035", "2040", "2045", "2050") %>% 
     filter(Variable %in% var_list)
   
-  AR6$World <- read_csv(paste0(config$data$ref, "/1668008312256-AR6_Scenarios_Database_World_v1.1.csv/AR6_Scenarios_Database_World_v1.1.csv")) %>% 
+  AR6$World <- read_csv(paste0(config$data$ref, "/AR6_Scenarios_Database_World_v1.1.csv")) %>% 
     select("Model", "Scenario", "Region", "Variable", "Unit", "2020", "2025", "2030", "2035", "2040", "2045", "2050") %>% 
     filter(Variable %in% var_list)
   
-  AR6$meta <-  read_excel(paste0(config$data$ref, "/1668008228539-AR6_Scenarios_Database_R5_regions_v1.1.csv/AR6_Scenarios_Database_metadata_indicators_v1.1.xlsx"), sheet=2) %>% 
+  AR6$meta <-  read_excel(paste0(config$data$ref, "/AR6_Scenarios_Database_metadata_indicators_v1.1.xlsx"), sheet=2) %>% 
     select("Model", "Scenario", "Category")
   
   AR6$R5 <- left_join(AR6$R5, AR6$meta, by=c("Model", "Scenario")) %>% 

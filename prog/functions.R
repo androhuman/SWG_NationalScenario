@@ -77,11 +77,11 @@ plot_scenario_region <- function(scen, region, region_name, p_var, y_lab, dir, w
 
 
 plot_regression <- function(scen_calc, x_var, y_var, scen, p_title, xlab, ylab) {
-
+  
   ci_level = 0.95
   pi_level = 0.95
   n_grid = 200
-
+  
   obj <- scen_calc %>% 
     select("Region", "Model", "Scenario", "Variable",
            "2020","2025","2030","2035","2040","2045","2050") %>% 
@@ -130,7 +130,7 @@ plot_regression <- function(scen_calc, x_var, y_var, scen, p_title, xlab, ylab) 
   p <- ggplot(obj, aes(x = x_val, y = y_val)) +
     geom_point(aes(x = x_val, y = y_val), color = "grey40",
                size = 2.5, pch = 21, alpha = 0.2, fill = 'black'
-               ) +
+    ) +
     geom_ribbon(data = pred_df,
                 aes(x = x_val, ymin = pi_low, ymax = pi_high, fill = "95% PI"), #fill = "orange", 
                 alpha = 0.15, inherit.aes = FALSE) +

@@ -1,7 +1,7 @@
 library(tidyverse)
 library(readr)
 library(readxl)
-library(cowplot)
+library(ggpubr)
 library(RColorBrewer)
 library(broom)
 library(patchwork)
@@ -35,12 +35,14 @@ clean_data <- processed_data$clean %>%
 
 fixed_data <- fix_unit(clean_data, correction_table)
 
+load_IPCC_AR6(config)
+
+
 AR6_R5Asia <- read_csv(paste0(config$data$ref, "/AR6_R5Asia.csv"))
 
 AR6_world <- read_csv(paste0(config$data$ref, "/AR6_world.csv")) 
 
-AR6_meta <-  read_excel(paste0(config$data$ref, "/AR6_Scenarios_Database_metadata_indicators_v1.1.xlsx"), sheet=2) %>% 
-  select("Model", "Scenario", "Category")
+AR6_meta <-  read_excel(paste0(config$data$ref, "/AR6_Scenarios_Database_metadata_indicators_v1.1.xlsx"), sheet=2) %>% select("Model", "Scenario", "Category")
 
 #effort_sharing <- load_effort_sharing(config)
 
@@ -202,7 +204,7 @@ p_10 <- plot_regression(trend_df,
                         xlab="Emissions reduction rate from baseline (%)", 
                         ylab="Decrease from baseline (%)")
 
-legend <- get_legend(p_1$plot) 
+legend <- get_legend(p_1$plot)
 
 p <- (p_1$plot + p_2$plot + p_3$plot + p_4$plot + p_5$plot + p_6$plot + p_7$plot + p_8$plot + p_9$plot) & 
   theme(legend.position = "none") 
@@ -278,10 +280,10 @@ share_national <- scen_calc %>%
     by = c("Region" = "Country")) %>% 
   filter(Scenario %in% 'NZS', 
          Variable %in% c("Primary Energy|Non-fossil|Share",
-                    "Primary Energy|Non-fossil|Solar|Share",
-                    "Primary Energy|Non-fossil|Wind|Share",
-                    "Final Energy|Electricity|Share"
-    ), Year %in% c('2020', '2030', '2040', '2050')) %>% 
+                         "Primary Energy|Non-fossil|Solar|Share",
+                         "Primary Energy|Non-fossil|Wind|Share",
+                         "Final Energy|Electricity|Share"
+         ), Year %in% c('2020', '2030', '2040', '2050')) %>% 
   mutate(Category = "NZS")
 
 share_asia <- bind_rows(share_R5ASIA, share_national) %>% 
@@ -781,30 +783,43 @@ p4.5 <- ggplot(map_df) +
         legend.direction = "horizontal")
 
 
-middle_block <- (p4.2 / p4.4 + plot_layout(heights = c(0.8, 0.2))) | p4.3
-
-top_block <- (p4.1 /
-                (middle_block + plot_layout(widths = c(0.5,0.5)))) +
-  plot_layout(heights = c(0.5,0.5))
-
 legend1 <- get_legend(
-  p4.1 + theme(legend.position = "right",
-               legend.direction = "vertical")
+  p4.1 +
+    theme(
+      legend.position = "right",
+      legend.direction = "vertical"
+    )
 )
 
-top_with_legend <- plot_grid(
-  top_block,
-  legend1,
-  ncol = 2,
-  rel_widths = c(0.85, 0.15)
-) 
+p4.1_noleg <- p4.1 +
+  theme(legend.position = "none")
 
-p4 <- plot_grid(
-  top_with_legend,
-  p4.5,
-  ncol = 1,
-  rel_heights = c(0.6, 0.4)
-)
+middle_block <- (
+  (
+    p4.2 /
+      p4.4
+  ) +
+    plot_layout(heights = c(0.8, 0.2))
+) |
+  p4.3
+
+top_block <- (
+  p4.1_noleg /
+    middle_block
+) +
+  plot_layout(heights = c(0.5, 0.5))
+
+top_with_legend <- (
+  top_block |
+    wrap_elements(full = legend1)
+) +
+  plot_layout(widths = c(0.85, 0.15))
+
+p4 <- (
+  top_with_legend /
+    p4.5
+) +
+  plot_layout(heights = c(0.6, 0.4))
 
 ggsave(filename=paste0(config$output$main,"/", "4. Emissions Coverage and Remaining Budget", ".jpg"), plot=p4, width=240, height=310, units='mm', dpi=300)
 
