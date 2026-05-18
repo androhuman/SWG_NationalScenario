@@ -4,14 +4,12 @@ This repository contains the code required to reproduce the analysis and figures
 
 The data directory contains reference datasets, including IPCC AR6 data, effort-sharing data, historical CO₂ emissions (IEA-EDGAR), and World Bank income classifications. 
 
-IPCC AR6 scenario data v1.1 are downloaded from https://data.ene.iiasa.ac.at/ar6 (AR6 Scenarios Database hosted by IIASA, release v1.1)
-Place the following files inside the `data/ref_data/` folder from AR6 database:
-  AR6_Scenarios_Database_World_v1.1.csv
-  AR6_Scenarios_Database_R5_regions_v1.1.csv
-  AR6_Scenarios_Database_metadata_indicators_v1.1.xlsx
+IPCC AR6 scenario data v1.1 are downloaded from https://data.ene.iiasa.ac.at/ar6 (AR6 Scenarios Database hosted by IIASA, release v1.1). Place the following files inside the `data/ref_data/` folder from AR6 database:  
+AR6_Scenarios_Database_World_v1.1.csv  
+AR6_Scenarios_Database_R5_regions_v1.1.csv  
+AR6_Scenarios_Database_metadata_indicators_v1.1.xlsx  
 
-Historical CO2 emissions database (IEA-EDGAR CO2) is downloaded from https://edgar.jrc.ec.europa.eu/dataset_ghg80
-Place the following file inside the `data/ref_data/` folder:
+Historical CO2 emissions database (IEA-EDGAR CO2) is downloaded from https://edgar.jrc.ec.europa.eu/dataset_ghg80. Place the following file inside the `data/ref_data/` folder:  
   IEA_EDGAR_CO2_1970_2022.xlsx
 
 Economic classification of countries is based on the World Bank's classification which is downloaded from https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups
