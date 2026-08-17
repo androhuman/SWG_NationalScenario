@@ -6,7 +6,8 @@ The data directory contains reference datasets, including IPCC AR6 data, effort-
 
 IPCC AR6 scenario data v1.1 are downloaded from https://data.ene.iiasa.ac.at/ar6 (AR6 Scenarios Database hosted by IIASA, release v1.1). Place the following files inside the `data/ref_data/` folder from AR6 database:  
 AR6_Scenarios_Database_World_v1.1.csv  
-AR6_Scenarios_Database_R5_regions_v1.1.csv  
+AR6_Scenarios_Database_R5_regions_v1.1.csv 
+AR6_Scenarios_Database_R10_regions_v1.1
 AR6_Scenarios_Database_metadata_indicators_v1.1.xlsx  
 
 Historical CO2 emissions database (IEA-EDGAR CO2) is downloaded from https://edgar.jrc.ec.europa.eu/dataset_ghg80. Place the following file inside the `data/ref_data/` folder:  
