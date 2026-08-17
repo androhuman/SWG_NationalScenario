@@ -26,6 +26,7 @@ var_list <- load_var_list(config)
 
 scen_data <- load_scen_data(config, scen_dir, var_list, national_model)
 
+
 processed_data <- interpolate_and_flag_missing(scen_data)
 
 #flagged <- processed_data$flagged
@@ -64,6 +65,7 @@ coverage <- fixed_data %>%
 
 #calculate new parameters from all scenario
 scen_calc <- var_calc(fixed_data) %>% na.omit()
+
 
 #calculate change rate from baseline
 reduct_rate <- scen_calc %>% 
@@ -119,7 +121,7 @@ trend_df <- rbind(reduct_rate, share_change) %>%
 
 
 #-----------------------
-# Figure 1
+# Figure 2
 #---*---*---*---*---*---
 
 #regression charts for key variables 
@@ -209,10 +211,10 @@ legend <- get_legend(p_1$plot)
 p <- (p_1$plot + p_2$plot + p_3$plot + p_4$plot + p_5$plot + p_6$plot + p_7$plot + p_8$plot + p_9$plot) & 
   theme(legend.position = "none") 
 
-p1 <- p / legend +
+p2 <- p / legend +
   plot_layout(heights = c(1, 0.08))
 
-ggsave(filename=paste0(config$output$main,"/", "1. Regression of Key Variables", ".jpg"), plot=p1, width=335, height=300, units='mm', dpi=300)
+ggsave(filename=paste0(config$output$main,"/", "2. Regression of Key Variables", ".jpg"), plot=p2, width=335, height=300, units='mm', dpi=300)
 
 
 #save regression statistics 
@@ -242,7 +244,7 @@ write_csv(regression_table, file = file.path(config$output$main, "/", "regressio
 
 
 #-----------------------
-# Figure 2
+# Figure 3
 #---*---*---*---*---*---
 
 #national trends comparison with regional/global trends from IPCC AR6
@@ -326,12 +328,35 @@ share_world_asia <- bind_rows(share_asia, share_world) %>%
 
 share_world_asia$Type <- factor(share_world_asia$Type, levels = c("Global", "Asia")) %>% na.omit()
 
+#calculate difference from 2020 
+
+share_world_asia_2020 <- share_world_asia %>% 
+  pivot_wider(names_from = Year, values_from = Value) %>%
+  mutate(`2020_d`=`2020`-`2020`, `2030_d`=`2030`-`2020`, `2040_d`=`2040`-`2020`, `2050_d`=`2050`-`2020`) %>% 
+  select(-c(`2020`, `2030`, `2040`, `2040`, `2050`)) %>% 
+  rename(`2020`=`2020_d`, `2030`=`2030_d`, `2040`=`2040_d`, `2050`=`2050_d`) %>% 
+  pivot_longer(cols=-c(Model, Scenario, Region, Variable, Category, Type), names_to = "Year", values_to = "Value")
+  
 #count of scenarios for each variables
 
-count_df <- share_world_asia %>%
+count_df <- share_world_asia_2020 %>%
   distinct(Model, Region, Scenario, Variable, Category, Type) %>%
   group_by(Type, Variable, Category) %>%
   summarise(n_scen = n(), .groups = "drop")
+
+#save model information in csv
+
+model_table_fig2 <- share_world_asia_2020 %>% filter(Scenario %in% "NZS") %>% 
+  distinct(Variable, Region, Model) %>%
+  arrange(Variable, Region, Model) %>%
+  group_by(Variable, Region) %>%
+  summarise(
+    Models = str_c(Model, collapse = "; "),
+    N_models = n(),
+    .groups = "drop"
+  )
+
+write.csv(model_table_fig2,paste0(config$output$supplementary, "/Model_coverage_by_variable_fig2.csv"), row.names = FALSE)
 
 label_df <- count_df %>%
   pivot_wider(names_from = Category, values_from = n_scen) %>%
@@ -345,14 +370,15 @@ label_df <- count_df %>%
     )
   )
 
-p2 <- ggplot(share_world_asia, 
+p3 <- ggplot(share_world_asia_2020, 
              aes(x = factor(Year), y = Value, fill = Category)) +
   geom_boxplot(
     width = 0.6,
     outlier.shape = NA,
     position = position_dodge(width = 0.8),
     color = "black",
-    alpha = 0.5
+    alpha = 0.6,
+    linewidth = 0.25
   ) +
   coord_cartesian(ylim = c(0, 100))+
   facet_grid( Type ~ Variable, scales = "free_y") +
@@ -367,20 +393,23 @@ p2 <- ggplot(share_world_asia,
   scale_fill_manual(values = fill_colors, name = "") + 
   labs(
     x = "Year",
-    y = "Share(%)"
+    y = "Change in share(%) from year 2020"
     #title = "National NZS vs Global and Regional Trends"
   ) +
   theme_bw() +
-  theme(
+  theme(panel.grid = element_blank())+
+  theme(panel.grid = element_blank())+
+  theme(strip.background = element_blank(),
+        strip.text = element_text(face = "bold"),
     plot.title = element_text(hjust = 0.5),
     axis.text.x = element_text(angle = 0, hjust = 0.5),
     legend.position = "bottom"
   )
 
-ggsave(filename=paste0(config$output$main,"/", "2. National scenario trend comparison with regional and global trend", ".jpg"), plot=p2, width=250, height=150, units='mm', dpi=300)
+ggsave(filename=paste0(config$output$main,"/", "3. National scenario trend comparison with regional and global trend", ".jpg"), plot=p3, width=265, height=120, units='mm', dpi=300)
 
 #-----------------------
-# Figure 3
+# Figure 4
 #---*---*---*---*---*---
 
 #cumulative nzs emissions and global emission budget/effort sharing comparison 
@@ -461,9 +490,9 @@ emi_effort_c_index_w_income <- left_join(emi_effort_c_index, region_mapping %>% 
 
 
 #plots
-p3.1 <- plot_income_group(emi_effort_c_index_w_income, group = 'High income')
-p3.2 <- plot_income_group(emi_effort_c_index_w_income, group = 'Upper middle income')
-p3.3 <- plot_income_group(emi_effort_c_index_w_income, group = 'Lower middle income')
+p4.1 <- plot_income_group(emi_effort_c_index_w_income, group = 'High income')
+p4.2 <- plot_income_group(emi_effort_c_index_w_income, group = 'Upper middle income')
+p4.3 <- plot_income_group(emi_effort_c_index_w_income, group = 'Lower middle income')
 #p3.4 <- plot_income_group(emi_effort_c_index_w_income, group = 'Low income') #no low income countries in this analysis
 
 
@@ -481,25 +510,30 @@ design <- emi_effort_c_index_w_income %>%
     collapse = "\n"
   ) }
 
-p3 <- p3.1 / p3.2 / p3.3 +
+p4 <- p4.1 / p4.2 / p4.3 +
   plot_layout(design = design, guides = "collect")+
   plot_annotation(
     # title = 'Cumulative Emissions and Effort-Sharing Carbon Budgets by Income Group'
   )+
   labs(
     x = "Effort Sharing Schemes",
-    y = "Index (Median Cumulative NZS Emissions = 1)"
+    y = "Index (Median of cumulative emissions in net zero scenario = 1)"
+    #y = "Index (Median Cumulative NZS Emissions = 1)"
   )&
-  theme(
+  theme(strip.background = element_blank(),
+        #strip.text = element_text(face = "bold"),
     plot.title = element_text(size = 12, face = "bold"),
     legend.position = "right",
-    axis.title.y = element_text(hjust = -0.5)
+    axis.title.y = element_text(hjust = -0.3)
+    #axis.title.y = element_text(hjust = -0.5)
   )
 
-ggsave(filename=paste0(config$output$main,"/", "3. Cumulative Emissions and Effort Sharing Budgets by Income Group", ".jpg"), plot=p3, width=300, height=170, units='mm', dpi=300)
+ggsave(filename=paste0(config$output$main,"/", "4. Cumulative Emissions and Effort Sharing Budgets by Income Group", ".jpg"), plot=p4, width=300, height=170, units='mm', dpi=300)
+
+
 
 #-----------------------
-# Figure 4
+# Figure 1
 #---*---*---*---*---*---
 
 #figure with summation of NZS emissions
@@ -553,32 +587,32 @@ hist_emi_2020 <- hist_emi_2020 %>%
     Category = "Historical (2020)"
   ) 
 
-emi_2020_2050 <- emi_cumulative_median %>% 
-  select("Region", "emi_median") %>% 
-  mutate(`C2_median`=639.8031) %>% #aggregate national cumulative median emissions exceed C1 median value 
-  mutate(percentage = 100*emi_median/C2_median) %>% 
-  select("Region", "percentage")
-
-emi_2020_2050 <- emi_2020_2050 %>% 
-  bind_rows(tibble(Region = "Other", 
-                   percentage = 100 - sum(emi_2020_2050$percentage))) %>% 
-  arrange(desc(percentage))
-
-emi_2020_2050 <- emi_2020_2050 %>%
-  mutate(
-    cumshare = cumsum(percentage),
-    ypos = cumshare - percentage/2,
-    label = if_else(row_number() <= 4,
-                    sprintf("%.2f%%", percentage), ""),
-    Category = "Net Zero (2020-2050)"
-  ) 
+# emi_2020_2050 <- emi_cumulative_median %>% 
+#   select("Region", "emi_median") %>% 
+#   mutate(`C2_median`=639.8031) %>% #aggregate national cumulative median emissions exceed C1 median value 
+#   mutate(percentage = 100*emi_median/C2_median) %>% 
+#   select("Region", "percentage")
+# 
+# emi_2020_2050 <- emi_2020_2050 %>% 
+#   bind_rows(tibble(Region = "Other", 
+#                    percentage = 100 - sum(emi_2020_2050$percentage))) %>% 
+#   arrange(desc(percentage))
+# 
+# emi_2020_2050 <- emi_2020_2050 %>%
+#   mutate(
+#     cumshare = cumsum(percentage),
+#     ypos = cumshare - percentage/2,
+#     label = if_else(row_number() <= 4,
+#                     sprintf("%.2f%%", percentage), ""),
+#     Category = "Net Zero (2020-2050)"
+#   ) 
 
 emi_coverage <- rbind(hist_emi_1990_2020, hist_emi_2020)
 
 emi_coverage$Region <- factor(emi_coverage$Region,
                               levels = c(setdiff(emi_coverage$Region, "Other"), "Other"))
 
-p4.1 <-ggplot(emi_coverage, aes(x = 2, y = percentage, fill = Region)) +
+p1.1 <-ggplot(emi_coverage, aes(x = 2, y = percentage, fill = Region)) +
   geom_bar(stat = "identity", width = 1, color = "black") +
   scale_fill_manual(values = region_colors, name = "Countries", guide = guide_legend(ncol = 1)) +
   coord_polar("y", start = 0, direction = -1) +
@@ -648,7 +682,7 @@ g_world_C <- ggplot(c_range_n) +
     legend.position = "right"
   )
 
-p4.3 <- (g_emi_nzs_bar + g_world_C) +
+p1.3 <- (g_emi_nzs_bar + g_world_C) +
   plot_layout(ncol = 2, widths = c(0.07, 0.4)) +
   theme(plot.title = element_text(size = 12, face = "bold"),
         axis.title.y = element_text(size = 12))+
@@ -705,7 +739,7 @@ emi_AR6_summary <- emi_cumulative_AR6 %>%
     upper = max(cumulative, na.rm = TRUE)
   )
 
-p4.4 <- ggplot()+
+p1.4 <- ggplot()+
   geom_boxplot(data = emi_AR6_summary, aes(x=Category, y=median, ymin=lower, ymax = upper, lower=lower, upper=upper, middle = median, fill = Category, color=Category), 
                stat = "identity",
                alpha = 0.2)+
@@ -722,7 +756,7 @@ p4.4 <- ggplot()+
   labs(y = 'GtCO2',
        title = "c. Cumulative emissions from (b)")  
 
-p4.2 <- ggplot() +
+p1.2 <- ggplot() +
   geom_ribbon(data = data_summary, aes(x = Year, ymin = lower, ymax = upper, fill = Category), alpha = 0.2) +
   geom_line(data = data_summary, aes(x = Year, y = median, color = Category), size = 1) +
   geom_boxplot(data = summary_box,
@@ -773,7 +807,7 @@ emi_2020_map <- hist_emi_ene %>%
 map_df <- world %>%
   left_join(emi_2020_map, by = c("name" = "Region"))  
 
-p4.5 <- ggplot(map_df) +
+p1.5 <- ggplot(map_df) +
   geom_sf(aes(fill = emi_2020), color = "white", linewidth = 0.1) +
   scale_fill_gradient(low = "blanchedalmond", high = "indianred4", na.value = "grey80", name = "CO2 emissions in 2020 (Gt)")+ 
   labs(title = "e. Countries covered in this study")+
@@ -784,27 +818,27 @@ p4.5 <- ggplot(map_df) +
 
 
 legend1 <- get_legend(
-  p4.1 +
+  p1.1 +
     theme(
       legend.position = "right",
       legend.direction = "vertical"
     )
 )
 
-p4.1_noleg <- p4.1 +
+p1.1_noleg <- p1.1 +
   theme(legend.position = "none")
 
 middle_block <- (
   (
-    p4.2 /
-      p4.4
+    p1.2 /
+      p1.4
   ) +
     plot_layout(heights = c(0.8, 0.2))
 ) |
-  p4.3
+  p1.3
 
 top_block <- (
-  p4.1_noleg /
+  p1.1_noleg /
     middle_block
 ) +
   plot_layout(heights = c(0.5, 0.5))
@@ -817,12 +851,11 @@ top_with_legend <- (
 
 p4 <- (
   top_with_legend /
-    p4.5
+    p1.5
 ) +
   plot_layout(heights = c(0.6, 0.4))
 
-ggsave(filename=paste0(config$output$main,"/", "4. Emissions Coverage and Remaining Budget", ".jpg"), plot=p4, width=240, height=310, units='mm', dpi=300)
-
+ggsave(filename=paste0(config$output$main,"/", "1. Emissions Coverage and Remaining Budget", ".jpg"), plot=p4, width=240, height=310, units='mm', dpi=300)
 
 #-----------------------
 # supplementary

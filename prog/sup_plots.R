@@ -1,6 +1,6 @@
 #other plots
 
-#processed data for analysis
+#basic timeseries charts
 countries <- coverage$Region
 
 plot_scenario_region(fixed_data %>% filter(Region %in% countries), World, "World", "Emissions|CO2", "Mt CO2/yr", w=375, h=300)
@@ -8,120 +8,13 @@ plot_scenario_region(fixed_data %>% filter(Region %in% countries), World, "World
 plot_scenario_region(fixed_data %>% filter(Region %in% countries), World, "World", "Primary Energy", "EJ/yr", w=375, h=300)
 plot_scenario_region(fixed_data %>% filter(Region %in% countries), World, "World", "Final Energy", "EJ/yr", w=375, h=300)
 plot_scenario_region(fixed_data %>% filter(Region %in% countries), World, "World", "Secondary Energy|Electricity", "EJ/yr", w=375, h=300)
-
-#effort sharing charts for each country that can be placed in the supplementary
-
-lapply(countries, function(countries){
-  plot_effort_sharing(
-    emi_cumulative,
-    effort_sharing_range,
-    effort_sharing_C,
-    countries
-  )
-})
+plot_scenario_region(fixed_data %>% filter(Region %in% countries), World, "World", "GDP|MER", "billion USD_2010/yr", w=375, h=300)
 
 
 #Supplementary 1
 
-#countries colored in regression chart 
-
-
-#plot
-plot_regression_color(trend_df, 
-                      x_var="Emissions|CO2|Energy|Rate|Change", 
-                      y_var="Final Energy|Rate|Change", 
-                      scen='NZS',
-                      p_title="a. Change in Final Energy from Baseline", 
-                      xlab="Emissions Reduction Rate from Baseline (%)", 
-                      ylab="Change in Final Energy from Baseline (%)")
-
-plot_regression_color(trend_df, 
-                      x_var="Emissions|CO2|Energy|Rate|Change", 
-                      y_var="Final Energy|Electricity|Share|Change", 
-                      scen='NZS',
-                      p_title="b. Electricity Share in Final Energy", 
-                      xlab="Emissions Reduction Rate from Baseline (%)", 
-                      ylab="Change in Share from Baseline (%)")
-
-plot_regression_color(trend_df, 
-                      x_var="Emissions|CO2|Energy|Rate|Change", 
-                      y_var="Final Energy|Electricity+Hydrogen|Share|Change", 
-                      scen='NZS',
-                      p_title="c. Electricity+Hydrogen Share in Final Energy", 
-                      xlab="Emissions Reduction Rate from Baseline (%)", 
-                      ylab="Change in Share from Baseline (%)")
-
-plot_regression_color(trend_df, 
-                      x_var="Emissions|CO2|Energy|Rate|Change", 
-                      y_var="Primary Energy|Non-fossil|Share|Change", 
-                      scen='NZS',
-                      p_title="d. Non-fossil Share in Primary Energy", 
-                      xlab="Emissions Reduction Rate from Baseline (%)", 
-                      ylab="Change in Share from Baseline (%)")
-
-plot_regression_color(trend_df, 
-                      x_var="Emissions|CO2|Energy|Rate|Change", 
-                      y_var="Primary Energy|Fossil|Share|Change", 
-                      scen='NZS',
-                      p_title="e. Fossil Share in Primary Energy", 
-                      xlab="Emissions Reduction Rate from Baseline (%)", 
-                      ylab="Change in Share from Baseline (%)")
-
-plot_regression_color(trend_df, 
-                      x_var="Emissions|CO2|Energy|Rate|Change", 
-                      y_var="Primary Energy|Non-fossil|Solar|Share|Change", 
-                      scen='NZS',
-                      p_title="f. Solar Share in Non-fossil Primary Energy", 
-                      xlab="Emissions Reduction Rate from Baseline (%)", 
-                      ylab="Change in Share from Baseline (%)")
-
-
-plot_regression_color(trend_df, 
-                      x_var="Emissions|CO2|Energy|Rate|Change", 
-                      y_var="Primary Energy|Non-fossil|Wind|Share|Change", 
-                      scen='NZS',
-                      p_title="g. Wind Share in Non-fossil Primary Energy", 
-                      xlab="Emissions Reduction Rate from Baseline (%)", 
-                      ylab="Change in Share from Baseline (%)")
-
-
-plot_regression_color(trend_df, 
-                      x_var="Emissions|CO2|Energy|Rate|Change", 
-                      y_var="Carbon Intensity of TPES|Rate|Change", 
-                      scen='NZS',
-                      p_title="h. Carbon Intensity of TPES", 
-                      xlab="Emissions Reduction Rate from Baseline (%)", 
-                      ylab="Decrease from baseline (%)")
-
-plot_regression_color(trend_df, 
-                      x_var="Emissions|CO2|Energy|Rate|Change", 
-                      y_var="Energy Intensity of GDP|Rate|Change", 
-                      scen='NZS',
-                      p_title="i. Energy Intensity of GDP", 
-                      xlab="Emissions Reduction Rate from Baseline (%)", 
-                      ylab="Decrease from baseline (%)")
-
-plot_regression_color(trend_df, 
-                      x_var="Emissions|CO2|Energy|Rate|Change", 
-                      y_var="Emissions Intensity of GDP|Rate|Change", 
-                      scen='NZS',
-                      p_title="j. Emissions Intensity of GDP", 
-                      xlab="Emissions Reduction Rate from Baseline (%)", 
-                      ylab="Decrease from baseline (%)")
-
-plot_regression_color(trend_df, 
-                      x_var="Emissions|CO2|Energy|Rate|Change", 
-                      y_var="GDP Per Capita|Rate|Change", 
-                      scen='NZS',
-                      p_title="k. GDP Per Capita", 
-                      xlab="Emissions Reduction Rate from Baseline (%)", 
-                      ylab="Decrease from baseline (%)")
-
-
-
 #taking Emissions|CO2 instead of Emissions|CO2|Energy
 
-#Supplementary 2
 scen_calc <- var_calc(fixed_data)
 
 #calculate change rate from baseline
@@ -294,7 +187,7 @@ regression_table <- regression_table %>%
 write_csv(regression_table, file = file.path(config$output$supplementary, "/", "regression_summary_emi_CO2.csv"))
 
 
-#supplementary 3
+#supplementary 2
 #considering 2020 as reference year of comparison rather than baseline
 #calculate change rate from 2020
 scen_calc <- var_calc(fixed_data)
@@ -314,11 +207,7 @@ reduct_rate <- scen_calc %>%
   mutate(`2020_r`=100*(`2020`-`2020`)/`2020`, `2025_r`=100*(`2020`-`2025`)/`2020`, `2030_r`=100*(`2020`-`2030`)/`2020`, `2035_r`=100*(`2020`-`2035`)/`2020`, `2040_r`=100*(`2020`-`2040`)/`2020`, `2045_r`=100*(`2020`-`2045`)/`2020`, `2050_r`=100*(`2020`-`2050`)/`2020`) %>% 
   select("Model", "Region",  "Scenario", "Variable", "2020_r", "2025_r", "2030_r", "2035_r", "2040_r", "2045_r", "2050_r") %>% 
   rename(`2020`='2020_r', `2025`='2025_r', `2030`='2030_r', `2035`='2035_r', `2040`='2040_r', `2045`='2045_r', `2050`='2050_r') %>% 
-  
-  #mutate(rate = if_else(!is.na(BAU), 100*(BAU-NZS)/BAU, 100*(CPS-NZS)/CPS)) %>% 
-  
   mutate(Variable = paste0(Variable, "|Rate|Change")) 
-#filter(Scenario %in% 'NZS')
 
 #calculate change from 2020
 share_change <- scen_calc %>% 
@@ -473,7 +362,370 @@ regression_table <- regression_table %>%
 write_csv(regression_table, file = file.path(config$output$supplementary, "/", "regression_summary_base_2020.csv"))
 
 
-#Supplementary 4: effort sharing considering Emissions|CO2 
+#Supplementary 3
+
+#countries colored in regression chart 
+
+plot_regression_color(trend_df, 
+                      x_var="Emissions|CO2|Energy|Rate|Change", 
+                      y_var="Final Energy|Rate|Change", 
+                      scen='NZS',
+                      p_title="a. Change in Final Energy from Baseline", 
+                      xlab="Emissions Reduction Rate from Baseline (%)", 
+                      ylab="Change in Final Energy from Baseline (%)")
+
+plot_regression_color(trend_df, 
+                      x_var="Emissions|CO2|Energy|Rate|Change", 
+                      y_var="Final Energy|Electricity|Share|Change", 
+                      scen='NZS',
+                      p_title="b. Electricity Share in Final Energy", 
+                      xlab="Emissions Reduction Rate from Baseline (%)", 
+                      ylab="Change in Share from Baseline (%)")
+
+plot_regression_color(trend_df, 
+                      x_var="Emissions|CO2|Energy|Rate|Change", 
+                      y_var="Final Energy|Electricity+Hydrogen|Share|Change", 
+                      scen='NZS',
+                      p_title="c. Electricity+Hydrogen Share in Final Energy", 
+                      xlab="Emissions Reduction Rate from Baseline (%)", 
+                      ylab="Change in Share from Baseline (%)")
+
+plot_regression_color(trend_df, 
+                      x_var="Emissions|CO2|Energy|Rate|Change", 
+                      y_var="Primary Energy|Non-fossil|Share|Change", 
+                      scen='NZS',
+                      p_title="d. Non-fossil Share in Primary Energy", 
+                      xlab="Emissions Reduction Rate from Baseline (%)", 
+                      ylab="Change in Share from Baseline (%)")
+
+plot_regression_color(trend_df, 
+                      x_var="Emissions|CO2|Energy|Rate|Change", 
+                      y_var="Primary Energy|Fossil|Share|Change", 
+                      scen='NZS',
+                      p_title="e. Fossil Share in Primary Energy", 
+                      xlab="Emissions Reduction Rate from Baseline (%)", 
+                      ylab="Change in Share from Baseline (%)")
+
+plot_regression_color(trend_df, 
+                      x_var="Emissions|CO2|Energy|Rate|Change", 
+                      y_var="Primary Energy|Non-fossil|Solar|Share|Change", 
+                      scen='NZS',
+                      p_title="f. Solar Share in Non-fossil Primary Energy", 
+                      xlab="Emissions Reduction Rate from Baseline (%)", 
+                      ylab="Change in Share from Baseline (%)")
+
+
+plot_regression_color(trend_df, 
+                      x_var="Emissions|CO2|Energy|Rate|Change", 
+                      y_var="Primary Energy|Non-fossil|Wind|Share|Change", 
+                      scen='NZS',
+                      p_title="g. Wind Share in Non-fossil Primary Energy", 
+                      xlab="Emissions Reduction Rate from Baseline (%)", 
+                      ylab="Change in Share from Baseline (%)")
+
+
+plot_regression_color(trend_df, 
+                      x_var="Emissions|CO2|Energy|Rate|Change", 
+                      y_var="Carbon Intensity of TPES|Rate|Change", 
+                      scen='NZS',
+                      p_title="h. Carbon Intensity of TPES", 
+                      xlab="Emissions Reduction Rate from Baseline (%)", 
+                      ylab="Decrease from baseline (%)")
+
+plot_regression_color(trend_df, 
+                      x_var="Emissions|CO2|Energy|Rate|Change", 
+                      y_var="Energy Intensity of GDP|Rate|Change", 
+                      scen='NZS',
+                      p_title="i. Energy Intensity of GDP", 
+                      xlab="Emissions Reduction Rate from Baseline (%)", 
+                      ylab="Decrease from baseline (%)")
+
+plot_regression_color(trend_df, 
+                      x_var="Emissions|CO2|Energy|Rate|Change", 
+                      y_var="Emissions Intensity of GDP|Rate|Change", 
+                      scen='NZS',
+                      p_title="j. Emissions Intensity of GDP", 
+                      xlab="Emissions Reduction Rate from Baseline (%)", 
+                      ylab="Decrease from baseline (%)")
+
+plot_regression_color(trend_df, 
+                      x_var="Emissions|CO2|Energy|Rate|Change", 
+                      y_var="GDP Per Capita|Rate|Change", 
+                      scen='NZS',
+                      p_title="k. GDP Per Capita", 
+                      xlab="Emissions Reduction Rate from Baseline (%)", 
+                      ylab="Decrease from baseline (%)")
+
+
+
+#Supplementary 4
+#national scenario trends comparison with global trends:
+
+count_df <- share_world_asia %>%
+  distinct(Model, Region, Scenario, Variable, Category, Type) %>%
+  group_by(Type, Variable, Category) %>%
+  summarise(n_scen = n(), .groups = "drop")
+
+label_df <- count_df %>%
+  pivot_wider(names_from = Category, values_from = n_scen) %>%
+  mutate(#Year = Inf,
+    #Value = Inf,
+    label = paste0(
+      "C1: ", C1,
+      "\nC2: ", C2,
+      "\nC3: ", C3,
+      "\nNZS: ", NZS
+    )
+  )
+
+p <- ggplot(share_world_asia, 
+             aes(x = factor(Year), y = Value, fill = Category)) +
+  geom_boxplot(
+    width = 0.6,
+    outlier.shape = NA,
+    position = position_dodge(width = 0.8),
+    color = "black",
+    alpha = 0.6,
+    linewidth = 0.25
+  ) +
+  coord_cartesian(ylim = c(0, 100))+
+  facet_grid( Type ~ Variable, scales = "free_y") +
+  geom_label(
+    data = label_df,
+    aes(x = -Inf, y = Inf, label = label),
+    inherit.aes = FALSE,
+    hjust = -0.1,
+    vjust = 1.1,
+    size = 2.5
+  ) +
+  scale_fill_manual(values = fill_colors, name = "") + 
+  labs(
+    x = "Year",
+    y = "Change in share(%) from year 2020"
+    #title = "National NZS vs Global and Regional Trends"
+  ) +
+  theme_bw() +
+  theme(panel.grid = element_blank())+
+  theme(panel.grid = element_blank())+
+  theme(strip.background = element_blank(),
+        strip.text = element_text(face = "bold"),
+        plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 0, hjust = 0.5),
+        legend.position = "bottom"
+  )
+
+ggsave(filename=paste0(config$output$supplementary,"/", "4. National scenario trend comparison with regional and global trend", ".jpg"), plot=p, width=265, height=120, units='mm', dpi=300)
+
+
+#Supplementary 5
+
+#plot emissions reductions in national and global scenarios
+
+emi_national <- fixed_data %>% 
+  filter(Variable %in% "Emissions|CO2|Energy", Scenario %in% "NZS") %>% 
+  pivot_longer(cols = -c(Model, Scenario, Region, Variable, Unit), names_to = "Year", values_to = "Value") %>% 
+  mutate(Category="NZS", Type="National")
+
+emi_AR6_world <- AR6_world %>% 
+  filter(Variable %in% "Emissions|CO2|Energy", Category %in% c("C1", "C2", "C3"))
+
+emi_AR6_world_interpolated <- interpolate_and_flag_missing(emi_AR6_world)
+
+emi_AR6_world_fixed <- emi_AR6_world_interpolated$interpolated %>% 
+  mutate(Type="Global")
+
+#emi_AR6_asia <- AR6_R5Asia %>% filter(Variable %in% "Emissions|CO2|Energy", Category %in% c("C1", "C2", "C3"))
+
+#emi_AR6_asia_interpolated <- interpolate_and_flag_missing(emi_AR6_asia)
+
+#emi_AR6_asia_fixed <- emi_AR6_asia_interpolated$interpolated
+
+#national R10 emissions from AR6
+emi_AR6_R10 <- read_csv(paste0(config$data$ref, "/AR6_Scenarios_Database_R10_regions_v1.1.csv")) %>% 
+  left_join(AR6_meta, by=c("Model", "Scenario")) %>% 
+  filter(Region %in% c("R10INDIA+", "R10CHINA+"), Variable %in% "Emissions|CO2|Energy", Category %in% c("C1", "C2", "C3")) %>% 
+  pivot_longer(cols = -c(Model, Scenario, Region, Variable, Unit, Category), names_to = "Year", values_to = "Value") %>% 
+  filter(Year %in% seq(2020, 2050, by=5)) %>% 
+  pivot_wider(names_from = "Year", values_from = "Value")
+
+emi_AR6_R10_interpolated <- interpolate_and_flag_missing(emi_AR6_R10)
+
+emi_AR6_R10_fixed <- emi_AR6_R10_interpolated$interpolated %>% 
+  mutate(Type = "R10")
+
+#combine
+
+emi_df <- rbind(emi_AR6_world_fixed, emi_national, emi_AR6_R10_fixed)
+#mutate(Type="Global")
+
+emi_rate_df <- emi_df %>% 
+  mutate(Year = as.numeric(Year)) %>%
+  group_by(Model, Region,Scenario, Category) %>%
+  mutate(
+    baseline_2020 = Value[Year == 2020][1],
+    reduction_rate = (baseline_2020 - Value) / baseline_2020
+  ) %>% 
+  ungroup()
+
+
+#plot
+
+fill_colors <- c(
+  NZS = "red",
+  C1 = "#C7E9C0",
+  C2 = "#FED9A6",
+  C3 = "#CCE5FF"
+)
+
+p1 <- ggplot(emi_rate_df %>% filter(Type %in% c("Global", "National")),
+             aes(x = factor(Year),
+                 y = reduction_rate,
+                 fill = Category)) +
+  
+  geom_jitter(
+    aes(color = Category),
+    position = position_jitterdodge(
+      jitter.width = 0.08,
+      dodge.width = 0.8
+    ),
+    size = 1.2,
+    alpha = 0.9
+  ) +
+  
+  geom_boxplot(
+    aes(group = interaction(Year, Category)),
+    position = position_dodge(width = 0.8),
+    width = 0.4,
+    fill = NA,
+    colour = "black",
+    outlier.shape = NA,
+    linewidth = 0.4
+  )+
+  
+  scale_colour_manual(values = fill_colors,
+                      guide = guide_legend(
+                        override.aes = list(size = 4, alpha = 1)
+                      ))+
+  
+  scale_y_continuous(labels = scales::percent)+
+
+  labs(
+    x = "Year",
+    y = "Reduction rate from 2020",
+    fill = "Category",
+    color = "Category"
+  ) +
+  
+  theme_bw() +
+  theme(
+    legend.position = "bottom",
+    panel.grid.minor = element_blank()
+  )
+
+
+#for R10 vs national
+
+emi_rate_df2 <- emi_rate_df %>%
+  filter(Region %in% c("India","China","R10INDIA+","R10CHINA+")) %>%
+  mutate(
+    Country = case_when(
+      Region %in% c("India","R10INDIA+") ~ "India",
+      Region %in% c("China","R10CHINA+") ~ "China"
+    ),
+    Dataset = case_when(
+      Region %in% c("India","China") ~ "National",
+      TRUE ~ "R10"
+    )
+  )
+
+
+p2 <- ggplot(emi_rate_df2,
+             aes(x = factor(Year),
+                 y = reduction_rate,
+                 fill = Category)) +
+  
+  geom_jitter(
+    aes(color = Category),
+    position = position_jitterdodge(
+      jitter.width = 0.08,
+      dodge.width = 0.8
+    ),
+    size = 1.2,
+    alpha = 0.9
+  ) +
+  
+  geom_boxplot(
+    aes(group = interaction(Year, Category)),
+    position = position_dodge(width = 0.8),
+    width = 0.4,
+    fill = NA,
+    colour = "black",
+    outlier.shape = NA,
+    linewidth = 0.4
+  )+
+  facet_wrap(~Country)+
+  scale_colour_manual(values = fill_colors,
+                      guide = guide_legend(
+                        override.aes = list(size = 4, alpha = 1)
+                      ))+
+  
+  scale_y_continuous(labels = scales::percent)+
+
+  labs(
+    x = "Year",
+    y = "Reduction rate from 2020",
+    fill = "Category",
+    color = "Category"
+  ) +
+  
+  theme_bw() +
+  theme(
+    legend.position = "bottom",
+    panel.grid.minor = element_blank(),
+    strip.background = element_blank()
+    
+  )
+
+#final plot
+
+legend <- get_legend(
+  p1 + theme(legend.position = "right")
+)
+
+p1 <- p1 +
+  ggtitle("a. Emissions reductions in national scenarios compared with global pathways") +
+  
+  theme(legend.position = "none",
+        plot.title = element_text(
+          face = "bold",
+          hjust = 0,
+          size = 12
+        ))
+
+p2 <- p2 +
+  ggtitle("b. Comparison of emissions reduction in national and R10 regional pathways") +
+  theme(legend.position = "none",
+        plot.title = element_text(
+          face = "bold",
+          hjust = 0,
+          size = 12
+        ))
+
+top_row <-
+  p1 +
+  wrap_elements(legend) +
+  plot_layout(widths = c(2, 1))
+
+p <-
+  top_row /
+  p2 +
+  plot_layout(heights = c(1, 1))
+
+ggsave(filename=paste0(config$output$supplementary,"/", "5. Emissions reduction in national and global scenarios", ".jpg"), plot=p, width=250, height=150, units='mm', dpi=300)
+
+
+#Supplementary 6
+#effort sharing considering Emissions|CO2 in national scenario
 
 #Coverage of countries for Emissions|CO2
 coverage_SI <- fixed_data %>%
@@ -571,15 +823,15 @@ p3 <- p3.1 / p3.2 / p3.3 +
     axis.title.y = element_text(hjust = -0.5)
   )
 
-ggsave(filename=paste0(config$output$supplementary,"/", "3. Cumulative Emissions and Effort Sharing Budgets by Income Group Emissions CO2", ".jpg"), plot=p3, width=300, height=170, units='mm', dpi=300)
+ggsave(filename=paste0(config$output$supplementary,"/", "6. Cumulative Emissions and Effort Sharing Budgets by Income Group Emissions CO2", ".jpg"), plot=p3, width=300, height=170, units='mm', dpi=300)
 
 
-#supplementary 5: considering Emissions|CO2 for aggregated analysis
+#supplementary 7
+#considering Emissions|CO2 for aggregated analysis
 
 #historical cumulative for countries considered in this study
 #hist_emi_ene <- load_hist_emi(config)
 hist_emi<- read_excel(paste0(config$data$ref, "/IEA_EDGAR_CO2_1970_2022.xlsx"), sheet=3, skip = 9) %>% 
-  #filter(str_detect(ipcc_code_2006_for_standard_report, "^1.")) %>% 
   rename(Region=Name, Variable=Substance) %>% 
   select("Region", "Variable", paste0("Y_", 1990:2020)) %>% 
   rename_with(~ gsub("Y_", "", .x), starts_with("Y_")) %>% 
@@ -887,5 +1139,141 @@ p4 <- (
   plot_layout(heights = c(0.6, 0.4))
 
 
-ggsave(filename=paste0(config$output$supplementary,"/", "4. Emissions Coverage and Remaining Budget Emissions CO2", ".jpg"), plot=p4, width=240, height=310, units='mm', dpi=300)
+ggsave(filename=paste0(config$output$supplementary,"/", "7. Emissions Coverage and Remaining Budget Emissions CO2", ".jpg"), plot=p4, width=240, height=310, units='mm', dpi=300)
+
+#plot coverage
+
+#full coverage information
+
+coverage_full <- union(coverage, coverage_SI)
+
+#save as csv
+write.csv(coverage_full, paste0(config$output$supplementary, "/Model_region_scenario_coverage.csv"), row.names = FALSE)
+
+
+#Supplementary 8
+#effort sharing charts for each country 
+
+lapply(countries, function(countries){
+  plot_effort_sharing(
+    emi_cumulative,
+    effort_sharing_range,
+    effort_sharing_C,
+    countries
+  )
+})
+
+
+#Additional
+#Full coverage in a map
+
+country_label <- coverage_full %>%
+  group_by(Region) %>%
+  summarise(
+    label = paste0(
+      Region,
+      "\n",
+      paste(unique(Model), collapse="\n")
+    )
+  ) %>% unique()
+
+world <- ne_countries(returnclass = "sf")
+
+world$Region <- world$name
+
+# fix names
+world$Region[world$Region=="United States of America"] <- "United States"
+world$Region[world$Region=="Korea, Rep."] <- "South Korea"
+world$Region[world$Region=="Vietnam"] <- "Viet Nam"
+
+countries <- world %>%
+  inner_join(country_label)
+
+centers <- st_centroid(countries)
+
+coord <- st_coordinates(centers)
+
+centers$x <- coord[,1]
+centers$y <- coord[,2]
+
+label_pos <- tribble(
+  ~Region,          ~x_box, ~y_box,
+  
+  # North
+  "Canada",          -90,    70,
+  "Norway",          0,    70,
+  "Germany",          -15,    55,
+  "Switzerland",      55,    70,
+  "Ukraine",          55,    55,
+  "Portugal",        -30,    40,
+  "Algeria",          -20,   10,
+  "Turkey",           15,   10,
+  
+  # West
+  "United States",  -150,    40,
+  "Mexico",         -150,    15,
+  "Ecuador",        -90,   -10,
+  "Brazil",         -40,   -10,
+  "Argentina",      -40,   -50,
+  
+  # East
+  "Japan",           175,    35,
+  "South Korea",     175,    70,
+  "China",           175,     0,
+  "Nepal",           60,   40,
+  
+  # South
+  "India",            60,   -40,
+  "Saudi Arabia",     50,   10,
+  "Thailand",        90,   -12,
+  "Viet Nam",        120,   5,
+  "Indonesia",       120,   -50,
+  "Australia",       170,   -40
+)
+
+label_df <- centers %>%
+  left_join(label_pos, by = "Region")
+
+plot_map <- ggplot() +
+  
+  geom_sf(data=world,
+          fill="grey95",
+          color="grey60",
+          linewidth=0.2)+
+  
+  geom_sf(data=countries,
+          fill="steelblue")+
+  
+  geom_segment(
+    data=label_df,
+    aes(
+      x=x,
+      y=y,
+      xend=x_box,
+      yend=y_box
+    ),
+    linewidth=0.4
+  )+
+  
+  geom_label(
+    data=label_df,
+    aes(
+      x=x_box,
+      y=y_box,
+      label=label
+    ),
+    size=2.5,
+    label.size=0.3
+  )+
+  
+  coord_sf(
+    xlim=c(-180,180),
+    ylim=c(-90,90)
+  )+
+  
+  theme_void()
+
+ggsave(filename=paste0(config$output$supplementary,"/", "9. Coverage Map", ".jpg"), plot=plot_map, width=285, height=150, units='mm', dpi=300)
+
+
 

@@ -269,7 +269,7 @@ plot_regression_color <- function(scen_calc, x_var, y_var, scen, p_title, xlab, 
           legend.position = "right",
           legend.direction = "vertical")
   
-  outdir <- paste0(config$output$supplementary, "/trends")
+  outdir <- paste0(config$output$supplementary, "/3. Regression Charts with Countries Colored")
   if(!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
   
   ggsave(filename=paste0(outdir,"/", p_title, ".jpg"), plot=p, width=150, height=150, units='mm', dpi=300)
@@ -363,7 +363,7 @@ plot_effort_sharing <- function(emi_cumulative, effort_sharing_range, effort_sha
       title = country
     )
   
-  outdir <- paste0(config$output$supplementary, "/effort_sharing")
+  outdir <- paste0(config$output$supplementary, "/8. Individual Countries and Scenarios Effort Sharing Comparison")
   if(!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
   
   ggsave(filename=paste0(outdir,"/", country, ".jpg"), plot=p, width=150, height=100, units='mm', dpi=300)
@@ -390,9 +390,12 @@ plot_income_group <- function(df, group){
     ) +
     scale_color_manual(
       values = c(
-        C1 = "#A6DDB7",
-        C2 = "#FDBE85",
+        C1 = "#7FCDBB",
+        C2 = "#FDAE61",
         C3 = "#B3CDE3"
+        # C1 = "#A6DDB7",
+        # C2 = "#FDBE85",
+        # C3 = "#B3CDE3"
       ),
       name = "Category"
     ) +
@@ -404,8 +407,8 @@ plot_income_group <- function(df, group){
     ) +
     geom_hline(yintercept = 1, linetype = "dashed", linewidth = 0.5)+
     theme_bw() +
-    theme(
-      plot.title = element_text(hjust = 0.5),
+    theme(  plot.subtitle = element_text(face = "bold"),
+      plot.title = element_text(face="bold", hjust = 0.5),
       legend.position = "none",
       axis.text.x = element_text(angle = 60, hjust = 1)
     )
