@@ -41,7 +41,7 @@ region_colors <- country_colors <- c(
   "South Korea"     = "#FABFD2",
   #"Pakistan"        = "#2E8B57",
   "Switzerland"     = "#B6992D",
-  #"Turkey"          = "#C44E52",
+  "Turkey"          = "#C44E52",
   "Canada"          = "#2E8B57",
   "Germany"         = "#6B6ECF",
   "Portugal"        = "#C7C7C7",
@@ -65,6 +65,7 @@ national_model <- c("AIM-Thailand 1",
                     "DNE21+ V.16_JMIP", 
                     "ELENA v1",
                     "GCAM KAIST 2.0",
+                    "GCAM-CEEW-national 5.2",
                     "GCAM-China-v6",
                     "GCAM-KSA V1.0", 
                     "GCAM-USA-CGS", 
@@ -99,3 +100,6 @@ national_model <- c("AIM-Thailand 1",
                     "TIMES-Ukraine v1",
                     "UNICON-K-Power 2"
 )
+
+
+

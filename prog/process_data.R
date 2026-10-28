@@ -1,7 +1,10 @@
 #this function interpolates the missing data in 10-year data format and makes it 5-year
-#also checks the missing data or NA values. 
-#Interpolation is done for variables having more than 3 values between 2020 and 2050
-interpolate_and_flag_missing <- function(df) {
+#also checks the missing data or NA values.
+#Gaps inside a series (up to 3 consecutive 5-year steps) are filled by linear interpolation.
+#Missing values at the start or end are only filled (with the nearest reported value) up to
+#`max_lead_steps` 5-year steps before the first reported year and `max_trail_steps` steps
+#after the last one; series with longer gaps at either end are flagged and excluded.
+interpolate_and_flag_missing <- function(df, max_lead_steps = 1, max_trail_steps = 0) {
   # Ensure long format
   df_long <- df %>%
     pivot_longer(
@@ -18,7 +21,8 @@ interpolate_and_flag_missing <- function(df) {
     all_na = list(),
     all_zero = list(),
     single_point = list(),
-    too_many_na = list()
+    too_many_na = list(),
+    missing_ends = list()
   )
   
   # Split by group (Model, Scenario, Region, Variable)
@@ -56,7 +60,16 @@ interpolate_and_flag_missing <- function(df) {
       return(grp)
     }
     
-    # Case 5: eligible for interpolation
+    # Case 5: too many missing steps at the start or end (no extrapolation beyond the limits)
+    obs_years <- x_vals[!is.na(y_vals)]
+    if (min(obs_years) - min(x_vals) > 5 * max_lead_steps ||
+        max(x_vals) - max(obs_years) > 5 * max_trail_steps) {
+      flagged$missing_ends <<- append(flagged$missing_ends, list(grp[1, c("Model", "Scenario", "Region", "Variable")]))
+      return(grp)
+    }
+    
+    # Case 6: eligible for interpolation
+    #rule = 2 holds the nearest value only for the end steps allowed above
     valid_idx <- !is.na(y_vals)
     if (sum(valid_idx) >= 2) {
       grp$Value <- approx(
@@ -78,7 +91,8 @@ interpolate_and_flag_missing <- function(df) {
     bind_rows(flagged$all_na) %>% mutate(Flag = "All NA"),
     bind_rows(flagged$all_zero) %>% mutate(Flag = "All Zero"),
     bind_rows(flagged$single_point) %>% mutate(Flag = "Single Data Point"),
-    bind_rows(flagged$too_many_na) %>% mutate(Flag = "Too Many Consecutive NAs")
+    bind_rows(flagged$too_many_na) %>% mutate(Flag = "Too Many Consecutive NAs"),
+    bind_rows(flagged$missing_ends) %>% mutate(Flag = "Missing Start/End Years")
   ) %>% distinct()
   
   # Create clean data by excluding flagged Model–Scenario–Region–Variable combos
@@ -127,23 +141,6 @@ var_calc <- function(df){
                            "Primary Energy|Hydro",
                            "Primary Energy|Geothermal",
                            
-                           # "Secondary Energy|Electricity",
-                           # "Secondary Energy|Electricity|Wind|Offshore",
-                           # "Secondary Energy|Electricity|Wind|Onshore",
-                           # "Secondary Energy|Electricity|Solar|PV",
-                           # "Secondary Energy|Electricity|Solar|CSP",
-                           # "Secondary Energy|Electricity|Hydro",
-                           # "Secondary Energy|Electricity|Nuclear",
-                           # 
-                           # "Secondary Energy|Electricity|Coal|w/o CCS",
-                           # "Secondary Energy|Electricity|Coal|w/ CCS",
-                           # "Secondary Energy|Electricity|Gas|w/o CCS",
-                           # "Secondary Energy|Electricity|Gas|w/ CCS",
-                           # "Secondary Energy|Electricity|Oil|w/o CCS",
-                           # "Secondary Energy|Electricity|Oil|w/ CCS",
-                           # "Secondary Energy|Electricity|Biomass|w/o CCS",
-                           # "Secondary Energy|Electricity|Biomass|w/ CCS",
-                           
                            "Final Energy",
                            "Final Energy|Electricity",
                            "Final Energy|Hydrogen")) %>% 
@@ -166,41 +163,16 @@ var_calc <- function(df){
       `Final Energy|Electricity|Share`=100*`Final Energy|Electricity`/`Final Energy`,
       `Final Energy|Electricity+Hydrogen|Share`=100*(`Final Energy|Electricity`+`Final Energy|Hydrogen`)/`Final Energy`,
       
-      
-      #`Primary Energy|Low Carbon` = `Primary Energy|Wind`+`Primary Energy|Solar` + `Primary Energy|Nuclear` + `Primary Energy|Hydro` + `Primary Energy|Geothermal`,
-      #`Primary Energy|Low Carbon|Share` = 100*`Primary Energy|Low Carbon`/`Primary Energy`,
       `Primary Energy|Non-fossil` = `Primary Energy|Wind`+`Primary Energy|Solar` + `Primary Energy|Nuclear` + `Primary Energy|Hydro` + `Primary Energy|Geothermal` + `Primary Energy|Biomass`,
       `Primary Energy|Non-fossil|Share` = 100*`Primary Energy|Non-fossil`/`Primary Energy`,
-      #`Primary Energy|Solar|Share` = 100*`Primary Energy|Solar`/`Primary Energy`,
-      #`Primary Energy|Wind|Share` = 100*`Primary Energy|Wind`/`Primary Energy`,
       
-      # `Primary Energy|Wind and Solar|Share`=100*(`Primary Energy|Wind`+`Primary Energy|Solar`)/`Primary Energy`,
-      # `Primary Energy|Coal|Share`=100*`Primary Energy|Coal`/`Primary Energy`,
-      # `Primary Energy|Gas|Share`=100*`Primary Energy|Gas`/`Primary Energy`,
-      # `Primary Energy|Biomass|Share`=100*`Primary Energy|Biomass`/`Primary Energy`,
-      # `Primary Energy|Nuclear|Share`=100*`Primary Energy|Nuclear`/`Primary Energy`,
-      # `Primary Energy|Hydro|Share`=100*`Primary Energy|Nuclear`/`Primary Energy`,
-      
-      
-      #`Primary Energy|Low Carbon|Solar|Share` = 100*`Primary Energy|Solar`/`Primary Energy|Low Carbon`,
-      #`Primary Energy|Low Carbon|Wind|Share` = 100*`Primary Energy|Wind`/`Primary Energy|Low Carbon`,
       `Primary Energy|Non-fossil|Solar|Share` = 100*`Primary Energy|Solar`/`Primary Energy|Non-fossil`,
       `Primary Energy|Non-fossil|Wind|Share` = 100*`Primary Energy|Wind`/`Primary Energy|Non-fossil`,
       
       `Primary Energy|Fossil` = `Primary Energy|Coal`+`Primary Energy|Oil`+`Primary Energy|Gas`,
       `Primary Energy|Fossil|Share` = 100*(`Primary Energy|Coal`+`Primary Energy|Oil`+`Primary Energy|Gas`)/`Primary Energy`
       
-      
-      # `Secondary Energy|Electricity|Fossil|w/o CCS`=`Secondary Energy|Electricity|Coal|w/o CCS`+`Secondary Energy|Electricity|Gas|w/o CCS`+`Secondary Energy|Electricity|Oil|w/o CCS`,
-      # `Secondary Energy|Electricity|Fossil|w/o CCS|Share`= 100*`Secondary Energy|Electricity|Fossil|w/o CCS`/`Secondary Energy|Electricity`,
-      # `Secondary Energy|Electricity|Fossil|w/ CCS`= `Secondary Energy|Electricity|Coal|w/ CCS`+ `Secondary Energy|Electricity|Gas|w/ CCS` + `Secondary Energy|Electricity|Oil|w/ CCS`,
-      # `Secondary Energy|Electricity|Fossil|w/ CCS|Share` = `Secondary Energy|Electricity|Fossil|w/ CCS`/ `Secondary Energy|Electricity`,
-      # `Secondary Energy|Electricity|Non-Bio Renewables`=`Secondary Energy|Electricity|Wind|Onshore`+`Secondary Energy|Electricity|Wind|Offshore`+
-      #   `Secondary Energy|Electricity|Solar|CSP`+`Secondary Energy|Electricity|Solar|PV`+`Secondary Energy|Electricity|Hydro`,
-      # `Secondary Energy|Electricity|Non-Bio Renewables|Share`= 100*`Secondary Energy|Electricity|Non-Bio Renewables`/`Secondary Energy|Electricity`,
-      # `Secondary Energy|Electricity|Biomass|w/ CCS|Share`= 100*`Secondary Energy|Electricity|Biomass|w/ CCS`/`Secondary Energy|Electricity`,
-      # `Secondary Energy|Electricity|Nuclear|Share`= 100*`Secondary Energy|Electricity|Nuclear`/`Secondary Energy|Electricity`
-      ) %>% 
+    ) %>% 
     pivot_longer(cols = c(`Emissions|CO2|Energy|Demand`,
                           `Emissions|CO2|Energy|Supply`,
                           `Emissions|CO2|Energy`,
@@ -227,48 +199,15 @@ var_calc <- function(df){
                           `Primary Energy|Nuclear`,
                           `Primary Energy|Hydro`,
                           `Primary Energy|Geothermal`,
-                          #`Primary Energy|Wind and Solar|Share`,
-                          #`Primary Energy|Low Carbon`,
-                          #`Primary Energy|Low Carbon|Share`,
+                          
                           `Primary Energy|Non-fossil`,
                           `Primary Energy|Non-fossil|Share`,
-                          # `Primary Energy|Coal|Share`,
-                          # `Primary Energy|Gas|Share`,
-                          # `Primary Energy|Biomass|Share`,
-                          # `Primary Energy|Nuclear|Share`,
-                          # `Primary Energy|Hydro|Share`,
-                          # `Primary Energy|Solar|Share`,
-                          # `Primary Energy|Wind|Share`,
+                          
                           `Primary Energy|Fossil`,
                           `Primary Energy|Fossil|Share`,
-                          #`Primary Energy|Low Carbon|Solar|Share`,
-                          #`Primary Energy|Low Carbon|Wind|Share`,
+                          
                           `Primary Energy|Non-fossil|Solar|Share`,
                           `Primary Energy|Non-fossil|Wind|Share`,
-                          
-                          # `Secondary Energy|Electricity`,
-                          # `Secondary Energy|Electricity|Coal|w/o CCS`,
-                          # `Secondary Energy|Electricity|Gas|w/o CCS`,
-                          # `Secondary Energy|Electricity|Oil|w/o CCS`,
-                          # `Secondary Energy|Electricity|Coal|w/ CCS`,
-                          # `Secondary Energy|Electricity|Gas|w/ CCS`,
-                          # `Secondary Energy|Electricity|Oil|w/ CCS`,
-                          # `Secondary Energy|Electricity|Fossil|w/o CCS`,
-                          # `Secondary Energy|Electricity|Non-Bio Renewables`,
-                          # `Secondary Energy|Electricity|Biomass|w/o CCS`,
-                          # `Secondary Energy|Electricity|Biomass|w/ CCS`,
-                          # `Secondary Energy|Electricity|Nuclear`,
-                          # `Secondary Energy|Electricity|Wind|Onshore`,
-                          # `Secondary Energy|Electricity|Wind|Offshore`,
-                          # `Secondary Energy|Electricity|Solar|CSP`,
-                          # `Secondary Energy|Electricity|Solar|PV`,
-                          # `Secondary Energy|Electricity|Hydro`,
-                          # `Secondary Energy|Electricity|Fossil|w/ CCS`,
-                          # `Secondary Energy|Electricity|Fossil|w/ CCS|Share`,
-                          # `Secondary Energy|Electricity|Biomass|w/ CCS|Share`,
-                          # `Secondary Energy|Electricity|Nuclear|Share`,
-                          # `Secondary Energy|Electricity|Fossil|w/o CCS|Share`,
-                          # `Secondary Energy|Electricity|Non-Bio Renewables|Share`,
                           
                           `Final Energy`,
                           `Final Energy|Electricity`,
@@ -281,4 +220,3 @@ var_calc <- function(df){
   
   return(calc)
 }
-

@@ -373,9 +373,13 @@ plot_effort_sharing <- function(emi_cumulative, effort_sharing_range, effort_sha
 
 plot_income_group <- function(df, group){
   p <- ggplot(df %>% filter(`Income group` %in% group)) +
-    geom_linerange(
+    geom_linerange(data = ~ filter(.x, Category == "C2"), 
       aes(x = a, ymin = min_CB_idx, ymax = max_CB_idx, color = Category),
       linewidth = 3
+    ) +
+    geom_linerange(data = ~ filter(.x, Category == "C1"),
+      aes( x = a, ymin = min_CB_idx, ymax = max_CB_idx, color = Category),
+      linewidth = 2
     ) +
     geom_errorbar(
       aes(x = a, ymin = emi_lower_idx, ymax = emi_upper_idx),

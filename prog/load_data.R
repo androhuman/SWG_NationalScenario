@@ -5,42 +5,31 @@ load_var_list <-function(config){
   return(basic_var)
 }
 
-#this function was used to load and save csv from main scenario database
-load_scen_data <- function(config, scen_dir, var, national_model) {
+#this function was used to load csv from main scenario database file with name: snapshot_all_regions.csv
+load_scen_data <- function(config, var) {
   
-  scen_file <- file.path(config$data$scen, "scen_data.csv")
-  raw_file  <- file.path(config$data$scen, "snapshot_all_regions.csv")
+  raw_file <- file.path(config$data$scen, "snapshot_all_regions.csv")
   
-  scen_data <- tryCatch({
-    
-    if (file.exists(scen_file)) {
-      message("Loading existing scen_data.csv")
-      return(read_csv(scen_file))
-    }
-    
-    if (!file.exists(raw_file)) {
-      stop("Raw data file 'snapshot_all_regions.csv' is missing in the scen_data folder.")
-    }
-    
-    message("scen_data.csv not found. Creating from snapshot_all_regions.csv...")
-    
-    scen_all <- read_csv(raw_file) %>% 
-      mutate(Model = str_trim(Model)) %>% 
-      filter(!Model %in% "CPAM China 1") %>% 
-      filter(Model %in% national_model) %>% 
-      filter(Variable %in% var)
-    
-    # Save for future use
-    write_csv(scen_all, scen_file)
-    
-    scen_all
-    
-  }, error = function(e) {
-    stop("Error in load_scen_data(): ", e$message)
-  })
+  if (!file.exists(raw_file)) {
+    stop("load_scen_data(): 'snapshot_all_regions.csv' is missing in ", config$data$scen)
+  }
   
-  return(scen_data)
+  message("Loading snapshot_all_regions.csv")
+  
+  read_csv(raw_file, col_types = cols(
+    Model    = col_character(),
+    Scenario = col_character(),
+    Region   = col_character(),
+    Variable = col_character(),
+    Unit     = col_character(),
+    .default = col_double()      # all year columns numeric
+  ),
+  show_col_types = FALSE) %>% 
+    mutate(Model = str_trim(Model)) %>% 
+    filter(Variable %in% var)
+  
 }
+
 
 #this function was used to extract and save IPCC AR6 database
 load_IPCC_AR6 <- function(config){
@@ -58,6 +47,7 @@ load_IPCC_AR6 <- function(config){
   AR6$meta <-  read_excel(paste0(config$data$ref, "/AR6_Scenarios_Database_metadata_indicators_v1.1.xlsx"), sheet=2) %>% 
     select("Model", "Scenario", "Category")
   
+  
   AR6$R5 <- left_join(AR6$R5, AR6$meta, by=c("Model", "Scenario")) %>% 
     filter(!is.na(Category))
   
@@ -66,7 +56,6 @@ load_IPCC_AR6 <- function(config){
   
   write_csv(AR6$World, file = file.path(config$data$ref, "/", "AR6_world.csv"))
   write_csv(AR6$R5 %>% filter(Region %in% 'R5ASIA'), file = file.path(config$data$ref, "/", "AR6_R5Asia.csv"))
-  #return(AR6)
 }
 
 
@@ -89,7 +78,7 @@ load_effort_sharing <- function(config){
 #this function loads historical emissions data from IEA_EDGAR
 load_hist_emi <- function(config){
   hist_emi<- read_excel(paste0(config$data$ref, "/IEA_EDGAR_CO2_1970_2022.xlsx"), sheet=2, skip = 9) %>% 
-    filter(str_detect(ipcc_code_2006_for_standard_report, "^1.")) %>% 
+    filter(str_detect(ipcc_code_2006_for_standard_report, "^1\\.")) %>% 
     rename(Region=Name, Variable=ipcc_code_2006_for_standard_report_name) %>% 
     select("Region", "Variable", paste0("Y_", 1990:2020)) %>% 
     rename_with(~ gsub("Y_", "", .x), starts_with("Y_")) %>% 

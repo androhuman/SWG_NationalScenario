@@ -15,6 +15,8 @@ source("prog/load_data.R")
 source("prog/process_data.R")
 source("prog/unit_correction_table.R")
 source("prog/functions.R")
+source("prog/fill_unreported_pe.R")
+source("prog/regression_loo.R")
 
 #-----------------------
 # Pre processing
@@ -24,20 +26,27 @@ create_dirs(config)
 
 var_list <- load_var_list(config)
 
-scen_data <- load_scen_data(config, scen_dir, var_list, national_model)
-
+scen_data <- load_scen_data(config, var_list) %>%  
+  filter(Model %in% national_model) 
 
 processed_data <- interpolate_and_flag_missing(scen_data)
-
-#flagged <- processed_data$flagged
 
 clean_data <- processed_data$clean %>% 
   pivot_wider(names_from = Year, values_from = Value)
 
 fixed_data <- fix_unit(clean_data, correction_table)
 
-load_IPCC_AR6(config)
 
+#set unreported primary energy carriers to 0 only where the reported carriers match total primary energy (within tol %); other cases are left unchanged
+pe_fill <- fill_unreported_pe(fixed_data, tol = 1)
+
+fixed_data <- pe_fill$data
+
+write_csv(pe_fill$check, file.path(config$output$supplementary, "PE_closure_check.csv"))
+write_csv(pe_fill$added, file.path(config$output$supplementary, "PE_unreported_set_to_zero.csv"))
+
+#load AR6 database
+load_IPCC_AR6(config)
 
 AR6_R5Asia <- read_csv(paste0(config$data$ref, "/AR6_R5Asia.csv"))
 
@@ -45,10 +54,11 @@ AR6_world <- read_csv(paste0(config$data$ref, "/AR6_world.csv"))
 
 AR6_meta <-  read_excel(paste0(config$data$ref, "/AR6_Scenarios_Database_metadata_indicators_v1.1.xlsx"), sheet=2) %>% select("Model", "Scenario", "Category")
 
-#effort_sharing <- load_effort_sharing(config)
 
+#load effort sharing data
 effort_sharing <- read_csv(paste0(config$data$ref, "/effort_sharing.csv"))
 
+#income class
 Income_Class <- load_WB_Class(config) %>% 
   select("Code", "Income group")
 
@@ -63,6 +73,7 @@ coverage <- fixed_data %>%
     .groups = "drop"
   )
 
+
 #calculate new parameters from all scenario
 scen_calc <- var_calc(fixed_data) %>% na.omit()
 
@@ -70,12 +81,10 @@ scen_calc <- var_calc(fixed_data) %>% na.omit()
 #calculate change rate from baseline
 reduct_rate <- scen_calc %>% 
   filter(Variable %in% c("Emissions|CO2|Energy",
-                         #"Emissions|CO2",
                          "Final Energy",
                          "GDP Per Capita",
                          "Energy Intensity of GDP",
                          "Emissions Intensity of GDP",
-                         #"Emission_CO2 Intensity of GDP",
                          "Carbon Intensity of TPES"
   )) %>% 
   pivot_longer(cols=-c(Model, Scenario, Region, Variable), names_to="Year", values_to="Value", names_transform=as.numeric) %>% 
@@ -93,17 +102,9 @@ share_change <- scen_calc %>%
                          "Primary Energy|Non-fossil|Share",
                          "Primary Energy|Non-fossil|Solar|Share",
                          "Primary Energy|Non-fossil|Wind|Share",
-                         #"Primary Energy|Wind and Solar|Share",
-                         #"Primary Energy|Biomass|Share",
-                         #"Primary Energy|Nuclear|Share",
-                         #"Primary Energy|Solar|Share",
-                         #"Primary Energy|Wind|Share",
+                        
                          "Final Energy|Electricity|Share",
                          "Final Energy|Electricity+Hydrogen|Share"
-                         #"GDP Per Capita",
-                         #"Energy Intensity of GDP",
-                         #"Emissions Intensity of GDP",
-                         #"Carbon Intensity of TPES"
   )) %>% 
   pivot_longer(cols=-c(Model, Scenario, Region, Variable), names_to="Year", values_to="Value", names_transform=as.numeric) %>% 
   pivot_wider(names_from = Scenario, values_from = Value) %>% 
@@ -117,7 +118,7 @@ share_change <- scen_calc %>%
 
 #dataframe for regression analysis
 trend_df <- rbind(reduct_rate, share_change) %>% 
-  na.omit()
+  na.omit() 
 
 
 #-----------------------
@@ -139,7 +140,7 @@ p_2 <- plot_regression(trend_df,
                        scen='NZS',
                        p_title="b. Electricity share in final energy", 
                        xlab="Emissions reduction rate from baseline (%)", 
-                       ylab="Change in share from baseline (%)")
+                       ylab="Change in share from baseline (pp)")
 
 p_3 <- plot_regression(trend_df, 
                        x_var="Emissions|CO2|Energy|Rate|Change", 
@@ -147,7 +148,7 @@ p_3 <- plot_regression(trend_df,
                        scen='NZS',
                        p_title="c. Non-fossil share in primary energy", 
                        xlab="Emissions reduction rate from baseline (%)", 
-                       ylab="Change in share from baseline (%)")
+                       ylab="Change in share from baseline (pp)")
 
 p_4 <- plot_regression(trend_df, 
                        x_var="Emissions|CO2|Energy|Rate|Change", 
@@ -155,7 +156,7 @@ p_4 <- plot_regression(trend_df,
                        scen='NZS',
                        p_title="d. Fossil share in primary energy", 
                        xlab="Emissions reduction rate from baseline (%)", 
-                       ylab="Change in share from baseline (%)")
+                       ylab="Change in share from baseline (pp)")
 
 p_5 <- plot_regression(trend_df, 
                        x_var="Emissions|CO2|Energy|Rate|Change", 
@@ -163,7 +164,7 @@ p_5 <- plot_regression(trend_df,
                        scen='NZS',
                        p_title="e. Solar share in non-fossil primary energy", 
                        xlab="Emissions reduction rate from baseline (%)", 
-                       ylab="Change in share from baseline (%)")
+                       ylab="Change in share from baseline (pp)")
 
 p_6 <- plot_regression(trend_df, 
                        x_var="Emissions|CO2|Energy|Rate|Change", 
@@ -171,7 +172,7 @@ p_6 <- plot_regression(trend_df,
                        scen='NZS',
                        p_title="f. Wind share in non-fossil primary energy", 
                        xlab="Emissions reduction rate from baseline (%)", 
-                       ylab="Change in share from baseline (%)")
+                       ylab="Change in share from baseline (pp)")
 
 p_7 <- plot_regression(trend_df, 
                        x_var="Emissions|CO2|Energy|Rate|Change", 
@@ -243,19 +244,37 @@ regression_table <- regression_table %>%
 write_csv(regression_table, file = file.path(config$output$main, "/", "regression_summary.csv"))
 
 
+#leave-one-out diagnostic: refit the 9 regressions removing one model / one country at a time
+loo_model   <- run_loo(trend_df, group_col = "Model",  label = "removed_model")
+loo_country <- run_loo(trend_df, group_col = "Region", label = "removed_country")
+
+write_csv(loo_model,   file.path(config$output$supplementary, "regression_loo_model.csv"))
+write_csv(loo_country, file.path(config$output$supplementary, "regression_loo_country.csv"))
+
+plot_loo_box(loo_model,   group_label = "model",
+             file = file.path(config$output$supplementary, "Regression slopes leave-one-model-out.jpg"))
+plot_loo_box(loo_country, group_label = "country",
+             file = file.path(config$output$supplementary, "Regression slopes leave-one-country-out.jpg"))
+
+
 #-----------------------
 # Figure 3
 #---*---*---*---*---*---
 
 #national trends comparison with regional/global trends from IPCC AR6
 
-#calculate new parameters from all scenario
+#calculate indicators from AR6 scenarios
+
+IPCC_World_calc <- var_calc(AR6_world) %>% na.omit()
 IPCC_R5ASIA_calc <- var_calc(AR6_R5Asia) %>% na.omit()
 
 #add C1, C2, C3 from metadata
+
 IPCC_R5ASIA_calc <- left_join(IPCC_R5ASIA_calc, AR6_meta, by=c("Model", "Scenario")) %>%
   filter(Category %in% c('C1','C2','C3'))
 
+IPCC_World_calc <- left_join(IPCC_World_calc, AR6_meta, by=c("Model", "Scenario")) %>%
+  filter(Category %in% c('C1','C2','C3'))
 
 # Define color palette
 fill_colors <- c(
@@ -266,6 +285,7 @@ fill_colors <- c(
 )
 
 #combine regional and national data
+
 share_R5ASIA <- IPCC_R5ASIA_calc %>% 
   pivot_longer(cols=-c(Model, Region, Scenario, Variable, Category), names_to="Year", values_to="Value", names_transform=as.numeric) %>% 
   filter(Variable %in% c("Primary Energy|Non-fossil|Share",
@@ -276,9 +296,10 @@ share_R5ASIA <- IPCC_R5ASIA_calc %>%
   mutate(Category = factor(Category, levels = c("C3", "C2", "C1")))
 
 share_national <- scen_calc %>% 
+  filter(Region %in% coverage$Region) %>% 
   pivot_longer(cols=-c(Model, Region, Scenario, Variable), names_to="Year", values_to="Value", names_transform=as.numeric) %>% 
   semi_join(
-    region_mapping %>% filter(Region == "Asia"),
+    region_mapping %>% filter(AR6_R5 == "R5ASIA"),
     by = c("Region" = "Country")) %>% 
   filter(Scenario %in% 'NZS', 
          Variable %in% c("Primary Energy|Non-fossil|Share",
@@ -291,11 +312,6 @@ share_national <- scen_calc %>%
 share_asia <- bind_rows(share_R5ASIA, share_national) %>% 
   mutate(Type = "Asia")
 
-#global
-IPCC_World_calc <- var_calc(AR6_world) %>% na.omit()
-
-IPCC_World_calc <- left_join(IPCC_World_calc, AR6_meta, by=c("Model", "Scenario")) %>%
-  filter(Category %in% c('C1','C2','C3'))
 
 #combine global and national data 
 share_world <- IPCC_World_calc %>% 
@@ -328,12 +344,13 @@ share_world_asia <- bind_rows(share_asia, share_world) %>%
 
 share_world_asia$Type <- factor(share_world_asia$Type, levels = c("Global", "Asia")) %>% na.omit()
 
-#calculate difference from 2020 
+
+#calculate difference from 2020 for 
 
 share_world_asia_2020 <- share_world_asia %>% 
   pivot_wider(names_from = Year, values_from = Value) %>%
   mutate(`2020_d`=`2020`-`2020`, `2030_d`=`2030`-`2020`, `2040_d`=`2040`-`2020`, `2050_d`=`2050`-`2020`) %>% 
-  select(-c(`2020`, `2030`, `2040`, `2040`, `2050`)) %>% 
+  select(-c(`2020`, `2030`, `2040`, `2050`)) %>% 
   rename(`2020`=`2020_d`, `2030`=`2030_d`, `2040`=`2040_d`, `2050`=`2050_d`) %>% 
   pivot_longer(cols=-c(Model, Scenario, Region, Variable, Category, Type), names_to = "Year", values_to = "Value")
   
@@ -346,7 +363,7 @@ count_df <- share_world_asia_2020 %>%
 
 #save model information in csv
 
-model_table_fig2 <- share_world_asia_2020 %>% filter(Scenario %in% "NZS") %>% 
+model_table_fig3 <- share_world_asia_2020 %>% filter(Scenario %in% "NZS") %>% 
   distinct(Variable, Region, Model) %>%
   arrange(Variable, Region, Model) %>%
   group_by(Variable, Region) %>%
@@ -356,7 +373,7 @@ model_table_fig2 <- share_world_asia_2020 %>% filter(Scenario %in% "NZS") %>%
     .groups = "drop"
   )
 
-write.csv(model_table_fig2,paste0(config$output$supplementary, "/Model_coverage_by_variable_fig2.csv"), row.names = FALSE)
+write.csv(model_table_fig3,paste0(config$output$supplementary, "/Model_coverage_by_variable_fig3.csv"), row.names = FALSE)
 
 label_df <- count_df %>%
   pivot_wider(names_from = Category, values_from = n_scen) %>%
@@ -393,7 +410,7 @@ p3 <- ggplot(share_world_asia_2020,
   scale_fill_manual(values = fill_colors, name = "") + 
   labs(
     x = "Year",
-    y = "Change in share(%) from year 2020"
+    y = "Change in share from year 2020 (pp)"
     #title = "National NZS vs Global and Regional Trends"
   ) +
   theme_bw() +
@@ -408,6 +425,7 @@ p3 <- ggplot(share_world_asia_2020,
 
 ggsave(filename=paste0(config$output$main,"/", "3. National scenario trend comparison with regional and global trend", ".jpg"), plot=p3, width=265, height=120, units='mm', dpi=300)
 
+
 #-----------------------
 # Figure 4
 #---*---*---*---*---*---
@@ -419,6 +437,7 @@ emi_cumulative <- fixed_data %>%
   pivot_longer(cols=-c(Model, Scenario, Region, Variable, Unit), names_to = 'Year', values_to = 'Emission', names_transform = as.numeric) %>%
   group_by(Model, Region, Scenario) %>% 
   arrange(Year, .by_group = TRUE) %>% 
+  filter(all(!is.na(Emission))) %>%
   mutate(
     next_Emission = lead(Emission),
     next_Year = lead(Year),
@@ -443,21 +462,24 @@ effort_sharing_range <- effort_sharing %>%
   )
 
 #C1, C2, C3 mapping
+rcb_category <- tribble(
+  ~Category, ~rcb_min, ~rcb_max,
+  "C1",      400,      700,
+  "C2",      500,      900,
+  "C3",      600,      1200
+)
 
-effort_sharing_C <- effort_sharing %>% 
-  filter(rcb %in% seq(400,1200, by=100)) %>% 
-  mutate(rcb = as.numeric(as.character(rcb)),
-         Category = case_when(
-           rcb >= 400 & rcb <= 700  ~ "C1",
-           rcb >= 500 & rcb <= 900  ~ "C2",
-           rcb >= 600 & rcb <= 1200 ~ "C3",
-           TRUE ~ NA_character_
-         )) %>% 
+effort_sharing_C <- effort_sharing %>%
+  filter(rcb %in% seq(400,1200, by=100)) %>%
+  mutate(rcb = as.numeric(as.character(rcb))) %>%
+  cross_join(rcb_category) %>%
+  filter(rcb >= rcb_min, rcb <= rcb_max) %>%
   group_by(Region, a, Category) %>% summarise(
     min_CB = min(CB, na.rm = TRUE),
     max_CB = max(CB, na.rm = TRUE),
     .groups = "drop"
   )
+
 
 #effort sharing for combined country chart with nzs budget as 1
 emi_cumulative_median <- emi_cumulative %>% 
@@ -621,12 +643,13 @@ p1.1 <-ggplot(emi_coverage, aes(x = 2, y = percentage, fill = Region)) +
   xlim(0, 2.5) +
   theme_void() +
   labs(title = "a. Emissions coverage") +
-  theme(plot.title = element_text(size = 12, face = "bold"),
+  theme(plot.title = element_text(size = 12, face = "bold",margin = margin(b = 10)),
         legend.position = "none",
         legend.direction = "vertical")
 
 #C1, c2 range across effort sharing for the considered countries in this study 
 c_range_n <- effort_sharing_C %>% 
+  filter(Region %in% coverage$Region) %>% 
   group_by(a, Category) %>% 
   summarise(lower=sum(min_CB), upper=sum(max_CB)) %>% filter(!Category %in% 'C3')
 
@@ -718,6 +741,7 @@ emi_cumulative_AR6 <- AR6_w_interpolated %>%
   select('Model', 'Scenario', 'Category', 'Year', 'Emission') %>% 
   group_by(Model, Scenario) %>% 
   arrange(Year, .by_group = TRUE) %>% 
+  filter(all(!is.na(Emission))) %>%
   mutate(
     next_Emission = lead(Emission),
     next_Year = lead(Year),

@@ -1,40 +1,41 @@
 
 region_mapping <- tribble(
-  ~Country,        ~ISO,  ~Region,
+  ~Country,        ~ISO,  ~Region,         ~AR6_R5,
   
-  "Japan",         "JPN", "Asia",
-  "China",         "CHN", "Asia",
-  "India",         "IND", "Asia",
-  "South Korea",   "KOR", "Asia",
-  "Pakistan",      "PAK", "Asia",
-  "Nepal",         "NPL", "Asia",
-  "Indonesia",     "IDN", "Asia",
-  "Thailand",      "THA", "Asia",
-  "Viet Nam",      "VNM", "Asia",
-  "Saudi Arabia",  "SAU", "Asia",
-  "Turkey",        "TUR", "Asia",
+  "Japan",         "JPN", "Asia",          "R5OECD",
+  "China",         "CHN", "Asia",          "R5ASIA",
+  "India",         "IND", "Asia",          "R5ASIA",
+  "South Korea",   "KOR", "Asia",          "R5ASIA",
+  "Pakistan",      "PAK", "Asia",          "R5ASIA",
+  "Nepal",         "NPL", "Asia",          "R5ASIA",
+  "Indonesia",     "IDN", "Asia",          "R5ASIA",
+  "Thailand",      "THA", "Asia",          "R5ASIA",
+  "Viet Nam",      "VNM", "Asia",          "R5ASIA",
+  "Saudi Arabia",  "SAU", "Asia",          "R5MAF",
+  "Turkey",        "TUR", "Asia",          "R5OECD",
+  "Bangladesh",    "BGD", "Asia",          "R5ASIA",
   
-  "United States", "USA", "North America",
-  "Canada",        "CAN", "North America",
-  "Mexico",        "MEX", "North America",
+  "United States", "USA", "North America", "R5OECD",
+  "Canada",        "CAN", "North America", "R5OECD",
+  "Mexico",        "MEX", "North America", "R5LAM",
   
-  "Argentina",     "ARG", "South America",
-  "Brazil",        "BRA", "South America",
-  "Ecuador",       "ECU", "South America",
+  "Argentina",     "ARG", "South America", "R5LAM",
+  "Brazil",        "BRA", "South America", "R5LAM",
+  "Ecuador",       "ECU", "South America", "R5LAM",
   
+  "Australia",     "AUS", "Oceania",       "R5OECD",
   
-  "Australia",     "AUS", "Oceania",
+  "Tunisia",       "TUN", "Africa",        "R5MAF",
+  "Algeria",       "DZA", "Africa",        "R5MAF",
+  "Nigeria",       "NGA", "Africa",        "R5MAF",
   
-  "Tunisia",       "TUN", "Africa",
-  "Algeria",       "DZA", "Africa",
-  "Nigeria",       "NGA", "Africa",
-  
-  "Ukraine",       "UKR", "Europe",
-  "Ireland",       "IRL", "Europe",
-  "Germany",       "DEU", "Europe",
-  "Portugal",      "PRT", "Europe",
-  "Norway",        "NOR", "Europe",
-  "Switzerland",   "CHE", "Europe"
+  "Ukraine",       "UKR", "Europe",        "R5REF",
+  "Ireland",       "IRL", "Europe",        "R5OECD",
+  "Germany",       "DEU", "Europe",        "R5OECD",
+  "Portugal",      "PRT", "Europe",        "R5OECD",
+  "Norway",        "NOR", "Europe",        "R5OECD",
+  "Switzerland",   "CHE", "Europe",        "R5OECD"
 )
 
 World <- c(region_mapping$Country)
+
