@@ -32,7 +32,7 @@ plot_scenario_region(fixed_data %>% filter(Region %in% countries), World, "World
 plot_scenario_region(fixed_data %>% filter(Region %in% countries), World, "World", "Population", "million", w=375, h=300)
 
 
-plot_scenario_region(fixed_data %>% filter(Region %in% countries, Model %in% "ATEM v1"), World, "World", "Final Energy", "EJ/yr", w=200, h=150)
+#plot_scenario_region(fixed_data %>% filter(Region %in% countries, Model %in% "ATEM v1"), World, "World", "Final Energy", "EJ/yr", w=200, h=150)
 
 
 
@@ -526,7 +526,7 @@ p <- ggplot(share_world_asia,
   scale_fill_manual(values = fill_colors, name = "") + 
   labs(
     x = "Year",
-    y = "Change in share(pp) from year 2020"
+    y = "Share (%)"
     #title = "National NZS vs Global and Regional Trends"
   ) +
   theme_bw() +
@@ -1172,7 +1172,7 @@ lapply(R, function(R){
 #effort sharing allocation comparison with model reporting full emissions
 
 full_co2_coverage <- fixed_data %>% 
-  group_by(Model) %>% 
+  group_by(Model, Region, Scenario) %>% 
   filter(all(c("Emissions|CO2", "Emissions|CO2|Energy and Industrial Processes", "Emissions|CO2|AFOLU") %in% Variable)) %>% 
   ungroup()
 
