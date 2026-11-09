@@ -1482,7 +1482,7 @@ AR6_ISO3 <- read_csv(paste0(config$data$ref, "/AR6_Scenarios_Database_ISO3_v1.1.
 
 
 AR6_ISO3 <- AR6_ISO3 %>%
-  left_join(AR6_meta, AR6_meta, by=c("Model", "Scenario")) %>% 
+  left_join(AR6_meta, by=c("Model", "Scenario")) %>% 
   filter(!is.na(Category)) 
 
 AR6_ISO3_r <- AR6_ISO3 %>% 
